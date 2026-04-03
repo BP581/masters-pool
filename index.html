@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Masters Pool Tracker 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --green: #1a4a2e;
+    --green-light: #2d6b45;
+    --green-dark: #0f2e1c;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --cream: #faf6ed;
+    --cream-dark: #f0e9d8;
+    --text: #1c1208;
+    --text-muted: #5a4a2a;
+    --white: #ffffff;
+    --shadow: rgba(15,46,28,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', serif;
+    background: var(--green-dark);
+    color: var(--cream);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(180deg, #0a1f12 0%, var(--green-dark) 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 18px 24px 14px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.3rem, 4vw, 2rem);
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: .04em;
+    line-height: 1.1;
+  }
+  header p.subtitle {
+    font-size: .9rem;
+    color: #8aaf8f;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* ── Nav ── */
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: var(--green-dark);
+    flex-wrap: wrap;
+  }
+  nav button {
+    background: transparent;
+    border: 1px solid #2d5a38;
+    color: #8aaf8f;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: .95rem;
+    cursor: pointer;
+    letter-spacing: .06em;
+    transition: all .2s;
+  }
+  nav button.active, nav button:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--green-dark);
+    font-weight: 600;
+  }
+
+  /* ── Refresh bar ── */
+  #refresh-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: rgba(255,255,255,.04);
+    border-bottom: 1px solid rgba(201,168,76,.2);
+    font-size: .82rem;
+    color: #7a9c80;
+  }
+  #refresh-bar button {
+    background: var(--gold);
+    color: var(--green-dark);
+    border: none;
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-family: 'Crimson Pro', serif;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  #refresh-bar button:hover { opacity: .85; }
+  #refresh-bar button:disabled { opacity: .5; cursor: default; }
+
+  /* ── Main content ── */
+  main { max-width: 860px; margin: 0 auto; padding: 16px 12px 40px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Tournament status card ── */
+  #tournament-card {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    border: 1px solid rgba(201,168,76,.35);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #tournament-card .trophy { font-size: 2.4rem; flex-shrink: 0; }
+  #tournament-card h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--gold); }
+  #tournament-card p { font-size: .9rem; color: #9ab89e; margin-top: 2px; }
+  #tournament-card .status-badge {
+    margin-left: auto;
+    background: var(--gold);
+    color: var(--green-dark);
+    font-weight: 700;
+    font-size: .75rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #tournament-card .status-badge.live { background: #e04040; color: #fff; }
+  #tournament-card .status-badge.pre { background: #4a7c5a; color: #fff; }
+
+  /* ── Standings table ── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(201,168,76,.3);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    letter-spacing: .05em;
+  }
+
+  .standings-grid {
+    display: grid;
+    gap: 8px;
+  }
+
+  .standing-row {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 28px 42px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    transition: background .15s;
+  }
+  .standing-row:hover { background: rgba(255,255,255,.08); }
+  .standing-row.first { border-color: var(--gold); background: rgba(201,168,76,.08); }
+
+  .rank {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-align: center;
+  }
+  .participant-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--cream);
+  }
+  .participant-picks-preview {
+    font-size: .78rem;
+    color: #8aaf8f;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+  }
+  .participant-score {
+    text-align: right;
+  }
+  .participant-score .total {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gold-light);
+  }
+  .participant-score .label {
+    font-size: .72rem;
+    color: #7a9c80;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .best-badge {
+    background: rgba(201,168,76,.2);
+    border: 1px solid rgba(201,168,76,.4);
+    color: var(--gold);
+    font-size: .72rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  /* ── Player details ── */
+  .player-card {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .player-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .player-pos {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--gold);
+    min-width: 36px;
+  }
+  .player-info h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--cream);
+  }
+  .player-info .country {
+    font-size: .8rem;
+    color: #8aaf8f;
+  }
+  .player-score-total {
+    margin-left: auto;
+    text-align: right;
+  }
+  .player-score-total .score {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .score.under { color: #5dba6e; }
+  .score.over { color: #e05050; }
+  .score.even { color: var(--cream); }
+  .player-score-total .thru {
+    font-size: .78rem;
+    color: #7a9c80;
+  }
+  .round-scores {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .round-chip {
+    background: rgba(255,255,255,.07);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: .82rem;
+    color: #aac4aa;
+  }
+  .round-chip span { color: var(--cream); font-weight: 600; }
+
+  /* who-picked this player */
+  .picker-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .picker-tag {
+    background: rgba(201,168,76,.15);
+    border: 1px solid rgba(201,168,76,.3);
+    color: var(--gold-light);
+    font-size: .75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  /* ── Setup panel ── */
+  .setup-section {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 18px;
+  }
+  .setup-section h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 1.05rem;
+    margin-bottom: 12px;
+  }
+  label { display: block; font-size: .88rem; color: #9ab89e; margin-bottom: 4px; }
+  input[type=text], input[type=password] {
+    width: 100%;
+    background: rgba(0,0,0,.3);
+    border: 1px solid rgba(201,168,76,.35);
+    color: var(--cream);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input[type=text]:focus, input[type=password]:focus { border-color: var(--gold); }
+
+  .btn {
+    background: var(--gold);
+    color: var(--green-dark);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn:hover { opacity: .88; }
+  .btn.secondary {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+  }
+
+  /* picks editor */
+  .picks-list { display: grid; gap: 8px; }
+  .pick-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    align-items: end;
+  }
+  .pick-row input { margin-bottom: 0; }
+
+  /* pick dropdowns */
+  .pick-select-wrap { position: relative; margin-bottom: 6px; }
+  .pick-select-wrap input[type=text] {
+    margin-bottom: 0;
+    padding-right: 32px;
+  }
+  .pick-select-wrap .dropdown-arrow {
+    position: absolute;
+    right: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--gold);
+    pointer-events: none;
+    font-size: .8rem;
+  }
+  .pick-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0; right: 0;
+    background: #0f2218;
+    border: 1px solid rgba(201,168,76,.5);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  }
+  .pick-dropdown div {
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: .95rem;
+    color: var(--cream);
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: background .12s;
+  }
+  .pick-dropdown div:last-child { border-bottom: none; }
+  .pick-dropdown div:hover, .pick-dropdown div.highlighted { background: rgba(201,168,76,.18); color: var(--gold-light); }
+  .pick-dropdown div .score-hint { font-size: .78rem; color: #7a9c80; margin-left: 8px; }
+  .pick-dropdown.hidden { display: none; }
+
+  .remove-btn {
+    background: rgba(224,80,80,.2);
+    border: 1px solid rgba(224,80,80,.4);
+    color: #e08080;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background .2s;
+  }
+  .remove-btn:hover { background: rgba(224,80,80,.35); }
+
+  /* ── Alerts ── */
+  .alert {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: .88rem;
+    margin-bottom: 14px;
+  }
+  .alert.info { background: rgba(90,140,110,.2); border: 1px solid rgba(90,140,110,.4); color: #9dd4aa; }
+  .alert.error { background: rgba(224,80,80,.15); border: 1px solid rgba(224,80,80,.4); color: #e09090; }
+  .alert.success { background: rgba(93,186,110,.15); border: 1px solid rgba(93,186,110,.4); color: #8dd4a0; }
+
+  /* ── Empty / loading ── */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #5a7c5a;
+    font-style: italic;
+    font-size: 1.05rem;
+  }
+
+  /* ── Settings ── */
+  #settings-btn {
+    position: fixed;
+    bottom: 18px;
+    right: 18px;
+    background: var(--green);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    transition: background .2s;
+    z-index: 200;
+  }
+  #settings-btn:hover { background: var(--green-light); }
+
+  /* ── Avatars ── */
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(201,168,76,.5);
+    flex-shrink: 0;
+    background: rgba(255,255,255,.08);
+  }
+  .avatar-placeholder {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    color: #5a7c5a;
+  }
+  .standing-row.first .avatar { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,.4); }
+
+  /* ── Responsive ── */
+  @media (max-width: 500px) {
+    .pick-row { grid-template-columns: 1fr; }
+    .standing-row { grid-template-columns: 24px 36px 1fr auto; }
+    .best-badge { display: none; }
+    .avatar, .avatar-placeholder { width: 36px; height: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⛳ Masters Pool Tracker</h1>
+  <p class="subtitle">Augusta National · April 9–12, 2026</p>
+</header>
+
+<nav>
+  <button class="active" data-tab="standings">Standings</button>
+  <button data-tab="players">Player Scores</button>
+  <button data-tab="setup">Setup / Picks</button>
+</nav>
+
+<div id="refresh-bar">
+  <span id="last-updated">Scores not yet loaded</span>
+  <button id="refresh-btn" onclick="fetchScores()">↻ Refresh Scores</button>
+</div>
+
+<main>
+
+  <!-- STANDINGS -->
+  <div id="tab-standings" class="panel active">
+    <div id="tournament-card">
+      <div class="trophy">🏆</div>
+      <div>
+        <h2 id="tournament-name">The 90th Masters Tournament</h2>
+        <p id="tournament-detail">Augusta National Golf Club</p>
+      </div>
+      <div class="status-badge pre" id="status-badge">Pre-Tournament</div>
+    </div>
+    <div class="section-title">Pool Standings</div>
+    <div id="standings-list" class="standings-grid">
+      <div class="empty">Load scores and add your pool picks in Setup to see standings.</div>
+    </div>
+  </div>
+
+  <!-- PLAYER DETAILS -->
+  <div id="tab-players" class="panel">
+    <div class="section-title">Masters Leaderboard</div>
+    <div id="player-list">
+      <div class="empty">Hit "Refresh Scores" to load the live leaderboard.</div>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="tab-setup" class="panel">
+    <div class="setup-section">
+      <h3>Airtable Sync (optional)</h3>
+      <p style="font-size:.85rem;color:#7a9c80;margin-bottom:12px;">Connect Airtable to share picks across devices. Get a free token at <a href="https://airtable.com/create/tokens" target="_blank" style="color:var(--gold)">airtable.com/create/tokens</a> with <strong>data.records:read</strong> and <strong>data.records:write</strong> scopes.</p>
+      <label>Personal Access Token</label>
+      <input type="password" id="at-token" placeholder="patXXXXXXXXXXXXXXXX" />
+      <label>Base ID</label>
+      <input type="text" id="at-base" placeholder="appXXXXXXXXXXXXXX" />
+      <label>Table Name</label>
+      <input type="text" id="at-table" placeholder="Picks" />
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="saveAirtable()">Save Airtable Settings</button>
+        <button class="btn secondary" onclick="loadFromAirtable()">Load Picks from Airtable</button>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <h3>Pool Participants & Picks</h3>
+      <p style="font-size:.85rem;color:#7a9c80;margin-bottom:14px;">Each participant picks 4 golfers. Their score is the sum of all 4 golfers' scores to par. Lowest score wins.</p>
+      <div id="picks-list" class="picks-list"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button class="btn secondary" onclick="addParticipant()">+ Add Participant</button>
+        <button class="btn" onclick="savePicks()">Save Picks</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<button id="settings-btn" title="Settings">⚙</button>
+
+<script>
+// ════════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════════
+let leaderboard = [];   // [{pos, name, score, scoreNum, thru, rounds:[{r,strokes,score}]}]
+let participants = [];  // [{name, picks:[golferName,golferName,golferName,golferName]}]
+let airtableCfg = { token: '', base: '', table: '' };
+let tournamentInfo = { name: 'The 90th Masters Tournament', status: 'pre', round: '' };
+
+// ════════════════════════════════════════════════
+// Persistence
+// ════════════════════════════════════════════════
+function save() {
+  localStorage.setItem('masters26_participants', JSON.stringify(participants));
+  localStorage.setItem('masters26_at', JSON.stringify(airtableCfg));
+}
+function load() {
+  try { participants = JSON.parse(localStorage.getItem('masters26_participants') || '[]'); } catch {}
+  try { airtableCfg = JSON.parse(localStorage.getItem('masters26_at') || '{}'); } catch {}
+  airtableCfg = { token:'', base:'appMvsicNBWOnWsxI', table:'Masters Pool - Participants', ...airtableCfg };
+  document.getElementById('at-token').value = airtableCfg.token || '';
+  document.getElementById('at-base').value  = airtableCfg.base  || '';
+  document.getElementById('at-table').value = airtableCfg.table || '';
+  renderPicksEditor();
+}
+
+// ════════════════════════════════════════════════
+// ESPN API — Masters 2026
+// The Masters event ID on ESPN is 401580334 (2026).
+// We fall back to the PGA scoreboard if not found.
+// ════════════════════════════════════════════════
+const ESPN_MASTERS_URL =
+  'https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard';
+
+async function fetchScores() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  document.getElementById('last-updated').textContent = 'Fetching…';
+
+  try {
+    const res = await fetch(ESPN_MASTERS_URL);
+    if (!res.ok) throw new Error(`ESPN returned ${res.status}`);
+    const data = await res.json();
+
+    // Find the Masters event
+    const events = data.events || [];
+    let mastersEvent = events.find(e =>
+      e.name?.toLowerCase().includes('masters') ||
+      e.shortName?.toLowerCase().includes('masters')
+    );
+
+    // If Masters hasn't started yet, there may be no event; use first event or show pre-tournament
+    if (!mastersEvent && events.length > 0) {
+      mastersEvent = events[0]; // show whatever is live / most recent
+    }
+
+    if (!mastersEvent) {
+      document.getElementById('last-updated').textContent = 'No active tournament found — Masters starts April 9';
+      showStatus('pre', 'The 90th Masters Tournament', 'Tournament begins April 9, 2026');
+      leaderboard = [];
+      renderPlayers();
+      renderStandings();
+      return;
+    }
+
+    parseESPNEvent(mastersEvent);
+
+  } catch (err) {
+    document.getElementById('last-updated').textContent = `Error: ${err.message}`;
+    showAlert('tab-players', `Could not load scores: ${err.message}. ESPN's API may be temporarily unavailable — try again shortly.`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Refresh Scores';
+  }
+}
+
+function parseESPNEvent(event) {
+  const comp = event.competitions?.[0];
+  const status = event.status?.type;
+  const statusName = status?.name || '';          // "STATUS_IN_PROGRESS" etc
+  const statusDesc = status?.description || '';
+
+  // Tournament info
+  tournamentInfo.name = event.name || 'Masters Tournament';
+  tournamentInfo.round = comp?.status?.period ? `Round ${comp.status.period}` : '';
+
+  let badgeClass = 'pre';
+  let badgeText = 'Pre-Tournament';
+  if (statusName.includes('IN_PROGRESS')) { badgeClass = 'live'; badgeText = `LIVE · ${tournamentInfo.round}`; }
+  else if (statusName.includes('FINAL') || statusName.includes('COMPLETE')) { badgeClass = ''; badgeText = 'Final'; }
+  else if (statusName.includes('SCHEDULED')) { badgeClass = 'pre'; badgeText = 'Upcoming'; }
+
+  showStatus(badgeClass, tournamentInfo.name, statusDesc || 'Augusta National Golf Club');
+  document.getElementById('status-badge').className = `status-badge ${badgeClass}`;
+  document.getElementById('status-badge').textContent = badgeText;
+
+  // Competitors → leaderboard
+  const competitors = comp?.competitors || [];
+  leaderboard = competitors.map(c => {
+    const scoreStr = c.score || 'E';
+    const scoreNum = parseScoreNum(scoreStr);
+    const linescores = c.linescores || [];
+    const rounds = linescores.map((ls, i) => ({
+      r: i + 1,
+      strokes: ls.value != null ? ls.value : '–',
+      score: ls.displayValue || '–'
+    }));
+
+    return {
+      pos: c.status?.position?.displayText || c.status?.displayValue || '–',
+      name: c.athlete?.displayName || c.athlete?.shortName || 'Unknown',
+      country: c.athlete?.flag?.alt || '',
+      score: scoreStr,
+      scoreNum,
+      thru: c.status?.thru || c.status?.displayValue || '',
+      rounds,
+      status: c.status?.type?.name || ''
+    };
+  });
+
+  // Sort by scoreNum
+  leaderboard.sort((a, b) => a.scoreNum - b.scoreNum);
+
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('last-updated').textContent = `Updated ${now} · ${leaderboard.length} players`;
+
+  renderPlayers();
+  renderStandings();
+  // Refresh picks editor so dropdowns have player names
+  if (document.getElementById('tab-setup').classList.contains('active')) renderPicksEditor();
+}
+
+function parseScoreNum(s) {
+  if (!s || s === 'E' || s === 'Even') return 0;
+  const n = parseInt(s.replace('+', ''));
+  return isNaN(n) ? 999 : n;
+}
+
+function showStatus(badgeClass, name, detail) {
+  document.getElementById('tournament-name').textContent = name;
+  document.getElementById('tournament-detail').textContent = detail;
+}
+
+function scoreClass(num) {
+  if (num < 0) return 'under';
+  if (num > 0) return 'over';
+  return 'even';
+}
+function fmtScore(s, num) {
+  if (num === 999) return '–';
+  if (num === 0) return 'E';
+  return s;
+}
+
+// ════════════════════════════════════════════════
+// Render: Player Details tab
+// ════════════════════════════════════════════════
+function renderPlayers() {
+  const el = document.getElementById('player-list');
+  if (!leaderboard.length) {
+    el.innerHTML = '<div class="empty">No leaderboard data yet — hit Refresh Scores.</div>';
+    return;
+  }
+
+  // Build a map of who picked whom
+  const pickerMap = {};
+  participants.forEach(p => {
+    (p.picks || []).forEach(pick => {
+      const key = pick.trim().toLowerCase();
+      if (!pickerMap[key]) pickerMap[key] = [];
+      pickerMap[key].push(p.name);
+    });
+  });
+
+  el.innerHTML = leaderboard.map(player => {
+    const sc = scoreClass(player.scoreNum);
+    const pickers = pickerMap[player.name.toLowerCase()] || [];
+    const roundHtml = player.rounds.length
+      ? player.rounds.map(r => `<div class="round-chip">R${r.r}: <span>${r.strokes}</span></div>`).join('')
+      : '<div class="round-chip" style="color:#5a7c5a">Round scores available during tournament</div>';
+    const pickerHtml = pickers.length
+      ? `<div class="picker-tags">${pickers.map(p => `<div class="picker-tag">📋 ${p}</div>`).join('')}</div>`
+      : '';
+
+    return `
+      <div class="player-card">
+        <div class="player-card-header">
+          <div class="player-pos">${player.pos}</div>
+          <div class="player-info">
+            <h3>${player.name}</h3>
+            <div class="country">${player.country}</div>
+          </div>
+          <div class="player-score-total">
+            <div class="score ${sc}">${fmtScore(player.score, player.scoreNum)}</div>
+            <div class="thru">${player.thru ? `Thru ${player.thru}` : ''}</div>
+          </div>
+        </div>
+        <div class="round-scores">${roundHtml}</div>
+        ${pickerHtml}
+      </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// Render: Standings tab
+// ════════════════════════════════════════════════
+function renderStandings() {
+  const el = document.getElementById('standings-list');
+  if (!participants.length) {
+    el.innerHTML = '<div class="empty">No participants yet — go to Setup to add pool members and their picks.</div>';
+    return;
+  }
+
+  // Build score lookup
+  const scoreMap = {};
+  leaderboard.forEach(p => {
+    scoreMap[p.name.toLowerCase()] = p.scoreNum === 999 ? 0 : p.scoreNum;
+  });
+
+  // Fuzzy match: try to match participant picks to leaderboard names
+  function findScore(pickName) {
+    const key = pickName.trim().toLowerCase();
+    if (scoreMap[key] !== undefined) return scoreMap[key];
+    // partial match
+    const found = Object.keys(scoreMap).find(k => k.includes(key) || key.includes(k));
+    return found !== undefined ? scoreMap[found] : 0;
+  }
+
+  function findPlayer(pickName) {
+    const key = pickName.trim().toLowerCase();
+    let p = leaderboard.find(pl => pl.name.toLowerCase() === key);
+    if (!p) p = leaderboard.find(pl => pl.name.toLowerCase().includes(key) || key.includes(pl.name.toLowerCase()));
+    return p;
+  }
+
+  const ranked = participants.map(participant => {
+    const picks = (participant.picks || []).filter(Boolean);
+    let total = 0;
+    let bestScore = Infinity;
+    const pickDetails = picks.map(pick => {
+      const player = findPlayer(pick);
+      const s = player ? (player.scoreNum === 999 ? 0 : player.scoreNum) : 0;
+      total += s;
+      if (s < bestScore) bestScore = s;
+      return { pick, score: s, player };
+    });
+    return { ...participant, total, pickDetails, bestScore };
+  }).sort((a, b) => a.total - b.total || a.name.localeCompare(b.name));
+
+  el.innerHTML = ranked.map((p, i) => {
+    const isFirst = i === 0;
+    const totalStr = p.total === 0 ? (leaderboard.length ? 'E' : '–') : (p.total > 0 ? `+${p.total}` : `${p.total}`);
+    const picksPreview = p.pickDetails.map(d => {
+      const s = d.player ? fmtScore(d.player.score, d.player.scoreNum) : '–';
+      return `${d.pick.split(' ').pop()} (${s})`;
+    }).join(' · ');
+
+    return `
+      <div class="standing-row ${isFirst ? 'first' : ''}">
+        <div class="rank">${i + 1}</div>
+        ${p.photo
+          ? `<img class="avatar" src="${p.photo}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;avatar-placeholder&quot;>👤</div>'" />`
+          : `<div class="avatar-placeholder">👤</div>`}
+        <div>
+          <div class="participant-name">${p.name}</div>
+          <div class="participant-picks-preview">${picksPreview || 'No picks entered'}</div>
+        </div>
+        <div class="participant-score">
+          <div class="total">${totalStr}</div>
+          <div class="label">Total</div>
+        </div>
+        <div class="best-badge">${isFirst ? '🥇 Leading' : ''}</div>
+      </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// Setup / Picks editor
+// ════════════════════════════════════════════════
+function renderPicksEditor() {
+  const el = document.getElementById('picks-list');
+  if (!participants.length) {
+    el.innerHTML = '<div class="empty" style="padding:16px 0;">No participants yet. Click "+ Add Participant" below.</div>';
+    return;
+  }
+  const hint = leaderboard.length
+    ? 'Type a name to search the live field'
+    : 'Load scores first to get player suggestions, or type a name manually';
+
+  el.innerHTML = participants.map((p, i) => `
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <input type="text" placeholder="Participant name" value="${esc(p.name)}"
+          oninput="participants[${i}].name=this.value" style="flex:1;margin-bottom:0;" />
+        <button class="remove-btn" onclick="removeParticipant(${i})">✕</button>
+      </div>
+      <div style="font-size:.82rem;color:#7a9c80;margin-bottom:8px;">${hint}</div>
+      ${[0,1,2,3,4].map(j => buildPickInput(i, j, (p.picks||[])[j]||'')).join('')}
+    </div>`).join('');
+}
+
+function buildPickInput(i, j, currentVal) {
+  const id = `pick_${i}_${j}`;
+  return `
+    <div class="pick-select-wrap" id="wrap_${id}">
+      <input type="text" id="${id}"
+        placeholder="Pick ${j+1}${leaderboard.length ? ' — start typing a name…' : ''}"
+        value="${esc(currentVal)}"
+        autocomplete="off"
+        oninput="onPickInput(${i},${j},this)"
+        onfocus="onPickInput(${i},${j},this)"
+        onblur="closeDropdown('${id}', 200)"
+        onkeydown="onPickKeydown(event,'${id}')" />
+      <span class="dropdown-arrow">▾</span>
+      <div class="pick-dropdown hidden" id="dd_${id}"></div>
+    </div>`;
+}
+
+function onPickInput(i, j, input) {
+  const val = input.value;
+  participants[i].picks = participants[i].picks || ['','','',''];
+  participants[i].picks[j] = val;
+
+  const ddId = `dd_pick_${i}_${j}`;
+  const dd = document.getElementById(ddId);
+  if (!dd) return;
+
+  const query = val.trim().toLowerCase();
+  // Get already-picked names for this participant (excluding current slot)
+  const taken = (participants[i].picks || []).filter((_, k) => k !== j).map(n => n.toLowerCase());
+
+  const matches = leaderboard
+    .filter(pl => !taken.includes(pl.name.toLowerCase()))
+    .filter(pl => !query || pl.name.toLowerCase().includes(query))
+    .slice(0, 12);
+
+  if (!matches.length) { dd.classList.add('hidden'); return; }
+
+  dd.innerHTML = matches.map(pl => {
+    const sc = pl.scoreNum === 999 ? '' : `<span class="score-hint">${fmtScore(pl.score, pl.scoreNum)}</span>`;
+    return `<div onmousedown="selectPick(${i},${j},'${esc(pl.name)}')">${pl.name}${sc}</div>`;
+  }).join('');
+  dd.classList.remove('hidden');
+}
+
+function selectPick(i, j, name) {
+  participants[i].picks = participants[i].picks || ['','','','',''];
+  participants[i].picks[j] = name;
+  const input = document.getElementById(`pick_${i}_${j}`);
+  if (input) input.value = name;
+  closeDropdown(`pick_${i}_${j}`, 0);
+}
+
+function closeDropdown(inputId, delay) {
+  setTimeout(() => {
+    const dd = document.getElementById(`dd_${inputId}`);
+    if (dd) dd.classList.add('hidden');
+  }, delay);
+}
+
+function onPickKeydown(e, inputId) {
+  const dd = document.getElementById(`dd_${inputId}`);
+  if (!dd || dd.classList.contains('hidden')) return;
+  const items = [...dd.querySelectorAll('div')];
+  const hi = dd.querySelector('.highlighted');
+  let idx = items.indexOf(hi);
+  if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx+1, items.length-1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(idx-1, 0); }
+  else if (e.key === 'Enter' && hi) { hi.dispatchEvent(new MouseEvent('mousedown')); return; }
+  else if (e.key === 'Escape') { dd.classList.add('hidden'); return; }
+  items.forEach(el => el.classList.remove('highlighted'));
+  if (items[idx]) items[idx].classList.add('highlighted');
+}
+
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function setPickAt(i, j, val) {
+  if (!participants[i].picks) participants[i].picks = [];
+  participants[i].picks[j] = val;
+}
+
+function addParticipant() {
+  participants.push({ name: '', picks: ['','','','',''], photo: '' });
+  renderPicksEditor();
+}
+
+function removeParticipant(i) {
+  participants.splice(i, 1);
+  renderPicksEditor();
+}
+
+function savePicks() {
+  save();
+  renderStandings();
+  showAlert('tab-setup', 'Picks saved!', 'success');
+}
+
+// ════════════════════════════════════════════════
+// Airtable
+// ════════════════════════════════════════════════
+function saveAirtable() {
+  airtableCfg.token = document.getElementById('at-token').value.trim();
+  airtableCfg.base  = document.getElementById('at-base').value.trim();
+  airtableCfg.table = document.getElementById('at-table').value.trim();
+  save();
+  showAlert('tab-setup', 'Airtable settings saved.', 'success');
+}
+
+async function loadFromAirtable() {
+  const { token, base, table } = airtableCfg;
+  if (!token || !base || !table) { showAlert('tab-setup', 'Please fill in Airtable token, base ID, and table name first.', 'error'); return; }
+  try {
+    const res = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`Airtable error ${res.status}`);
+    const data = await res.json();
+    participants = (data.records || []).map(r => {
+      const f = r.fields || {};
+      // Support both old generic field names and the actual Masters Pool field names
+      const name = f.Participant || f.Name || '';
+      const picks = [
+        f['Golfer 1'] || f.Pick1 || f['Pick 1'] || '',
+        f['Golfer 2'] || f.Pick2 || f['Pick 2'] || '',
+        f['Golfer 3'] || f.Pick3 || f['Pick 3'] || '',
+        f['Golfer 4'] || f.Pick4 || f['Pick 4'] || '',
+        f['Golfer 5'] || f.Pick5 || f['Pick 5'] || '',
+      ];
+      // Photo: use large thumbnail if available, else full URL
+      const photoArr = f.Photo || f.photo || [];
+      const photo = photoArr.length
+        ? (photoArr[0].thumbnails?.large?.url || photoArr[0].url || '')
+        : '';
+      return { name, picks, photo };
+    }).filter(p => p.name);
+    save();
+    renderPicksEditor();
+    renderStandings();
+    showAlert('tab-setup', `Loaded ${participants.length} participants from Airtable.`, 'success');
+  } catch (err) {
+    showAlert('tab-setup', `Airtable load failed: ${err.message}`, 'error');
+  }
+}
+
+// ════════════════════════════════════════════════
+// UI helpers
+// ════════════════════════════════════════════════
+function showAlert(tabId, msg, type='info') {
+  const panel = document.getElementById(`tab-${tabId.replace('tab-','')}`);
+  const existing = panel.querySelector('.alert');
+  if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.className = `alert ${type}`;
+  div.textContent = msg;
+  panel.insertBefore(div, panel.firstChild);
+  setTimeout(() => div.remove(), 4000);
+}
+
+// Tab switching
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    if (btn.dataset.tab === 'setup') renderPicksEditor();
+  });
+});
+
+// Settings button → setup tab
+document.getElementById('settings-btn').addEventListener('click', () => {
+  document.querySelector('nav button[data-tab="setup"]').click();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ════════════════════════════════════════════════
+// Boot
+// ════════════════════════════════════════════════
+load();
+fetchScores();
+</script>
+</body>
+</html>
