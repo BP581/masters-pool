@@ -532,23 +532,8 @@
   <!-- SETUP -->
   <div id="tab-setup" class="panel">
     <div class="setup-section">
-      <h3>Airtable Sync (optional)</h3>
-      <p style="font-size:.85rem;color:#7a9c80;margin-bottom:12px;">Connect Airtable to share picks across devices. Get a free token at <a href="https://airtable.com/create/tokens" target="_blank" style="color:var(--gold)">airtable.com/create/tokens</a> with <strong>data.records:read</strong> and <strong>data.records:write</strong> scopes.</p>
-      <label>Personal Access Token</label>
-      <input type="password" id="at-token" placeholder="patXXXXXXXXXXXXXXXX" />
-      <label>Base ID</label>
-      <input type="text" id="at-base" placeholder="appXXXXXXXXXXXXXX" />
-      <label>Table Name</label>
-      <input type="text" id="at-table" placeholder="Picks" />
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn" onclick="saveAirtable()">Save Airtable Settings</button>
-        <button class="btn secondary" onclick="loadFromAirtable()">Load Picks from Airtable</button>
-      </div>
-    </div>
-
-    <div class="setup-section">
       <h3>Pool Participants & Picks</h3>
-      <p style="font-size:.85rem;color:#7a9c80;margin-bottom:14px;">Each participant picks 4 golfers. Their score is the sum of all 4 golfers' scores to par. Lowest score wins.</p>
+      <p style="font-size:.85rem;color:#7a9c80;margin-bottom:14px;">Each participant picks 5 golfers. Their score is the sum of all 5 golfers' scores to par (with cut penalty applied). Lowest score wins. Changes are synced to Airtable automatically when you save.</p>
       <div id="picks-list" class="picks-list"></div>
       <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
         <button class="btn secondary" onclick="addParticipant()">+ Add Participant</button>
@@ -567,7 +552,7 @@
 // ════════════════════════════════════════════════
 let leaderboard = [];   // [{pos, name, score, scoreNum, thru, rounds:[{r,strokes,score}]}]
 let participants = [];  // [{name, picks:[golferName,golferName,golferName,golferName]}]
-let airtableCfg = { token: '', base: '', table: '' };
+const airtableCfg = { token: 'patnLz0Xd3bGfz3j7.aa5fcee63a840f9d3ee764a190741425d8ad4f0289d61f3e67e85b8d3732b621', base: 'appMvsicNBWOnWsxI', table: 'Masters Pool - Participants' };
 let tournamentInfo = { name: 'The 90th Masters Tournament', status: 'pre', round: '' };
 
 // ════════════════════════════════════════════════
@@ -575,15 +560,9 @@ let tournamentInfo = { name: 'The 90th Masters Tournament', status: 'pre', round
 // ════════════════════════════════════════════════
 function save() {
   localStorage.setItem('masters26_participants', JSON.stringify(participants));
-  localStorage.setItem('masters26_at', JSON.stringify(airtableCfg));
 }
 function load() {
   try { participants = JSON.parse(localStorage.getItem('masters26_participants') || '[]'); } catch {}
-  try { airtableCfg = JSON.parse(localStorage.getItem('masters26_at') || '{}'); } catch {}
-  airtableCfg = { token:'', base:'appMvsicNBWOnWsxI', table:'Masters Pool - Participants', ...airtableCfg };
-  document.getElementById('at-token').value = airtableCfg.token || '';
-  document.getElementById('at-base').value  = airtableCfg.base  || '';
-  document.getElementById('at-table').value = airtableCfg.table || '';
   renderPicksEditor();
 }
 
@@ -1061,14 +1040,6 @@ async function savePicks() {
 // ════════════════════════════════════════════════
 // Airtable
 // ════════════════════════════════════════════════
-function saveAirtable() {
-  airtableCfg.token = document.getElementById('at-token').value.trim();
-  airtableCfg.base  = document.getElementById('at-base').value.trim();
-  airtableCfg.table = document.getElementById('at-table').value.trim();
-  save();
-  showAlert('tab-setup', 'Airtable settings saved.', 'success');
-}
-
 async function loadFromAirtable() {
   const { token, base, table } = airtableCfg;
   if (!token || !base || !table) { showAlert('tab-setup', 'Please fill in Airtable token, base ID, and table name first.', 'error'); return; }
@@ -1141,6 +1112,7 @@ document.getElementById('settings-btn').addEventListener('click', () => {
 // ════════════════════════════════════════════════
 load();
 fetchScores();
+loadFromAirtable();
 </script>
 </body>
 </html>
