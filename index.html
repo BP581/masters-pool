@@ -205,6 +205,7 @@
   .pick-line .pick-name { color: #b0c8b0; }
   .pick-line .pick-score { color: var(--gold-light); font-weight: 600; min-width: 28px; }
   .pick-line .pick-cut { color: #e09090; font-size: .72rem; }
+  .pick-line .pick-thru { color: #6a9c7a; font-size: .72rem; margin-left: auto; }
   .participant-score {
     text-align: right;
   }
@@ -665,6 +666,7 @@ function parseESPNEvent(event) {
       score: scoreStr,
       scoreNum,
       thru: missedCut ? 'CUT' : (c.status?.thru || statusDisplay || ''),
+      teeTime: c.teeTime || c.status?.teeTimeDisplay || '',
       rounds,
       missedCut,
       status: statusTypeName
@@ -831,7 +833,24 @@ function renderStandings() {
       const eff = d.score;
       const effStr = eff === 0 ? 'E' : (eff > 0 ? `+${eff}` : `${eff}`);
       const cutTag = d.player.missedCut ? '<span class="pick-cut">✂ CUT</span>' : '';
-      return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">${effStr}</span>${cutTag}</div>`;
+      // Show holes thru, or tee time if not yet started, or nothing if complete
+      let thruTag = '';
+      if (d.player.missedCut) {
+        thruTag = ''; // already shown via cutTag
+      } else if (d.player.thru && d.player.thru !== '' && !isNaN(parseInt(d.player.thru))) {
+        thruTag = `<span class="pick-thru">Thru ${d.player.thru}</span>`;
+      } else if (d.player.teeTime && d.player.thru === '') {
+        // Format tee time: ESPN returns ISO string, convert to local time
+        try {
+          const t = new Date(d.player.teeTime);
+          const timeStr = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+          thruTag = `<span class="pick-thru">Tee ${timeStr}</span>`;
+        } catch { thruTag = ''; }
+      } else if (d.player.thru && d.player.thru !== '' && isNaN(parseInt(d.player.thru))) {
+        // e.g. "F" for finished
+        thruTag = `<span class="pick-thru">${d.player.thru}</span>`;
+      }
+      return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">${effStr}</span>${cutTag}${thruTag}</div>`;
     }).join('');
 
     return `
