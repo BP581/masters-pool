@@ -989,10 +989,73 @@ function removeParticipant(i) {
   renderPicksEditor();
 }
 
-function savePicks() {
+async function savePicks() {
   save();
   renderStandings();
-  showAlert('tab-setup', 'Picks saved!', 'success');
+
+  // If Airtable is configured, write picks back so all users see the update
+  const { token, base, table } = airtableCfg;
+  if (!token || !base || !table) {
+    showAlert('tab-setup', 'Picks saved locally. Connect Airtable to sync with other users.', 'info');
+    return;
+  }
+
+  showAlert('tab-setup', 'Saving to Airtable…', 'info');
+  try {
+    // First fetch all records to get their IDs matched to participant names
+    const res = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`Airtable error ${res.status}`);
+    const data = await res.json();
+
+    // Build a map of name → record ID
+    const recordIdMap = {};
+    (data.records || []).forEach(r => {
+      const name = r.fields?.Participant || r.fields?.Name || '';
+      if (name) recordIdMap[name.toLowerCase()] = r.id;
+    });
+
+    // Build update payloads — up to 10 per request (Airtable limit)
+    const updates = participants
+      .filter(p => p.name && recordIdMap[p.name.toLowerCase()])
+      .map(p => ({
+        id: recordIdMap[p.name.toLowerCase()],
+        fields: {
+          'fldIJZp0gWSYmNYcO': p.picks?.[0] || '',
+          'fldam3iL6KkGGOCsP': p.picks?.[1] || '',
+          'fldFRzZTPOjN0ORHr': p.picks?.[2] || '',
+          'fldYO1WZXHwwczNKd': p.picks?.[3] || '',
+          'fldYVfgSilOYzqVm7': p.picks?.[4] || '',
+        }
+      }));
+
+    if (!updates.length) {
+      showAlert('tab-setup', 'Picks saved locally. No matching Airtable records found to update.', 'info');
+      return;
+    }
+
+    // Send in batches of 10
+    for (let i = 0; i < updates.length; i += 10) {
+      const batch = updates.slice(i, i + 10);
+      const patchRes = await fetch(`https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ records: batch })
+      });
+      if (!patchRes.ok) {
+        const err = await patchRes.json();
+        throw new Error(err.error?.message || `Airtable patch error ${patchRes.status}`);
+      }
+    }
+
+    showAlert('tab-setup', `✓ Picks saved and synced to Airtable — all users will see the update.`, 'success');
+  } catch (err) {
+    showAlert('tab-setup', `Saved locally but Airtable sync failed: ${err.message}`, 'error');
+  }
 }
 
 // ════════════════════════════════════════════════
