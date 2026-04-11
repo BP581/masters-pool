@@ -221,6 +221,13 @@
     text-transform: uppercase;
     letter-spacing: .06em;
   }
+  .participant-score .today-score {
+    font-family: 'Playfair Display', serif;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #8aaf8f;
+    margin-top: 4px;
+  }
   .best-badge {
     background: rgba(201,168,76,.2);
     border: 1px solid rgba(201,168,76,.4);
@@ -644,10 +651,15 @@ function parseESPNEvent(event) {
     const statusTypeName = c.status?.type?.name || '';
     const statusDisplay  = c.status?.displayValue || '';
     const missedCut = statusTypeName.includes('CUT') ||
-                      statusDisplay.toUpperCase() === 'CUT' ||
-                      statusDisplay.toUpperCase().includes('MISSED CUT') ||
+                      statusTypeName.includes('MDF') ||
                       statusTypeName.includes('WITHDRAWN') ||
-                      statusDisplay.toUpperCase() === 'WD';
+                      statusDisplay.toUpperCase() === 'CUT' ||
+                      statusDisplay.toUpperCase() === 'MC' ||
+                      statusDisplay.toUpperCase() === 'MDF' ||
+                      statusDisplay.toUpperCase() === 'WD' ||
+                      statusDisplay.toUpperCase() === 'DQ' ||
+                      statusDisplay.toUpperCase().includes('MISSED CUT') ||
+                      statusDisplay.toUpperCase().includes('CUT');
 
     const scoreStr = c.score || 'E';
     const scoreNum = parseScoreNum(scoreStr);
@@ -659,12 +671,20 @@ function parseESPNEvent(event) {
       display: ls.displayValue || '–'
     }));
 
+    // Current round score = score of the last round with data
+    const lastRound = rounds.filter(r => r.strokes != null).slice(-1)[0];
+    const todayStrokes = lastRound ? lastRound.strokes : null;
+    const todayScoreNum = todayStrokes != null ? todayStrokes - 72 : null;
+    const todayStr = todayScoreNum == null ? '' : todayScoreNum === 0 ? 'E' : todayScoreNum > 0 ? `+${todayScoreNum}` : `${todayScoreNum}`;
+
     return {
       pos: missedCut ? 'CUT' : (c.status?.position?.displayText || statusDisplay || '–'),
       name: c.athlete?.displayName || c.athlete?.shortName || 'Unknown',
       country: c.athlete?.flag?.alt || '',
       score: scoreStr,
       scoreNum,
+      todayStr,
+      todayScoreNum,
       thru: missedCut ? 'CUT' : (c.status?.thru || statusDisplay || ''),
       teeTime: c.teeTime || c.status?.teeTimeDisplay || '',
       rounds,
@@ -827,6 +847,12 @@ function renderStandings() {
   el.innerHTML = ranked.map((p, i) => {
     const isFirst = i === 0;
     const totalStr = p.total === 0 ? (leaderboard.length ? 'E' : '–') : (p.total > 0 ? `+${p.total}` : `${p.total}`);
+    // Today's combined round score across all picks
+    const todayTotal = p.pickDetails.reduce((sum, d) => {
+      return sum + (d.player && d.player.todayScoreNum != null ? d.player.todayScoreNum : 0);
+    }, 0);
+    const hasToday = p.pickDetails.some(d => d.player && d.player.todayScoreNum != null);
+    const todayStr = !hasToday ? '' : todayTotal === 0 ? 'E' : todayTotal > 0 ? `+${todayTotal}` : `${todayTotal}`;
     const picksPreview = p.pickDetails.map(d => {
       const lastName = d.pick.split(' ').pop();
       if (!d.player) return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">–</span></div>`;
@@ -866,6 +892,7 @@ function renderStandings() {
         <div class="participant-score">
           <div class="total">${totalStr}</div>
           <div class="label">Total</div>
+          ${todayStr ? `<div class="today-score">${todayStr}</div><div class="label">Today</div>` : ''}
         </div>
         <div class="best-badge">${isFirst ? '🥇 Leading' : ''}</div>
       </div>`;
