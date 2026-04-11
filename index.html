@@ -167,10 +167,9 @@
     border-radius: 10px;
     padding: 12px 16px;
     display: grid;
-    grid-template-columns: 28px 42px 1fr auto auto;
-    align-items: start;
-    gap: 10px;
+    grid-template-columns: 52px 1fr auto auto;
     align-items: center;
+    gap: 10px;
     transition: background .15s;
   }
   .standing-row:hover { background: rgba(255,255,255,.08); }
@@ -465,6 +464,20 @@
   #settings-btn:hover { background: var(--green-light); }
 
   /* ── Avatars ── */
+  .avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 52px;
+  }
+  .avatar-rank {
+    font-family: 'Playfair Display', serif;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
   .avatar {
     width: 42px;
     height: 42px;
@@ -488,13 +501,15 @@
     color: #5a7c5a;
   }
   .standing-row.first .avatar { border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,.4); }
+  .standing-row.first .avatar-rank { color: var(--gold-light); font-size: .9rem; }
 
   /* ── Responsive ── */
   @media (max-width: 500px) {
     .pick-row { grid-template-columns: 1fr; }
-    .standing-row { grid-template-columns: 24px 36px 1fr auto; }
+    .standing-row { grid-template-columns: 44px 1fr auto; }
     .best-badge { display: none; }
     .avatar, .avatar-placeholder { width: 36px; height: 36px; }
+    .avatar-wrap { width: 44px; }
   }
 </style>
 </head>
@@ -890,6 +905,11 @@ function renderStandings() {
       // Cut tag
       const cutTag = d.player.missedCut ? '<span class="pick-cut">💩</span>' : '';
 
+      // Crown for tournament leader (ties included — anyone at position 1)
+      const tourneyLeaderScore = leaderboard.filter(pl => !pl.missedCut)[0]?.scoreNum;
+      const isTourneyLeader = !d.player.missedCut && d.player.scoreNum === tourneyLeaderScore;
+      const crownTag = isTourneyLeader ? '<span style="font-size:.85rem;" title="Tournament leader">👑</span>' : '';
+
       // Build round score chips using displayValue which is score vs par (e.g. "-2", "+2", "E")
       const roundChips = d.player.rounds.map(r => {
         if (r.strokes == null || r.display === '') return '';
@@ -939,15 +959,18 @@ function renderStandings() {
         }
       }
 
-      return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">${effStr}</span>${roundsHtml}${cutTag}${thruTag}</div>`;
+      return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">${effStr}</span>${roundsHtml}${crownTag}${cutTag}${thruTag}</div>`;
     }).join('');
 
+    const rankLabel = `#${i+1}`;
     return `
       <div class="standing-row ${isFirst ? 'first' : ''}">
-        <div class="rank">${i + 1}</div>
-        ${p.photo
-          ? `<img class="avatar" src="${p.photo}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;avatar-placeholder&quot;>👤</div>'" />`
-          : `<div class="avatar-placeholder">👤</div>`}
+        <div class="avatar-wrap">
+          <div class="avatar-rank">${rankLabel}</div>
+          ${p.photo
+            ? `<img class="avatar" src="${p.photo}" alt="${p.name}" onerror="this.outerHTML='<div class=&quot;avatar-placeholder&quot;>👤</div>'" />`
+            : `<div class="avatar-placeholder">👤</div>`}
+        </div>
         <div>
           <div class="participant-name">${p.name}</div>
           <div class="participant-picks-preview">${picksPreview || '<div class="pick-line" style="color:#5a7c5a;font-style:italic">No picks entered</div>'}</div>
@@ -957,7 +980,7 @@ function renderStandings() {
           <div class="label">Total</div>
           ${todayStr ? `<div class="today-score">${todayStr}</div><div class="label">Today</div>` : ''}
         </div>
-        <div class="best-badge">${isFirst ? '🥇 Leading' : ''}</div>
+        <div class="best-badge">${isFirst ? 'Leading' : ''}</div>
       </div>`;
   }).join('');
 }
