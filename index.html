@@ -646,20 +646,13 @@ function parseESPNEvent(event) {
   document.getElementById('status-badge').textContent = badgeText;
 
   // Competitors → leaderboard
+  // Determine what round the tournament is currently in
+  const currentRound = comp?.status?.period || 1;
+
   const competitors = comp?.competitors || [];
   leaderboard = competitors.map(c => {
     const statusTypeName = c.status?.type?.name || '';
     const statusDisplay  = c.status?.displayValue || '';
-    const missedCut = statusTypeName.includes('CUT') ||
-                      statusTypeName.includes('MDF') ||
-                      statusTypeName.includes('WITHDRAWN') ||
-                      statusDisplay.toUpperCase() === 'CUT' ||
-                      statusDisplay.toUpperCase() === 'MC' ||
-                      statusDisplay.toUpperCase() === 'MDF' ||
-                      statusDisplay.toUpperCase() === 'WD' ||
-                      statusDisplay.toUpperCase() === 'DQ' ||
-                      statusDisplay.toUpperCase().includes('MISSED CUT') ||
-                      statusDisplay.toUpperCase().includes('CUT');
 
     const scoreStr = c.score || 'E';
     const scoreNum = parseScoreNum(scoreStr);
@@ -670,6 +663,24 @@ function parseESPNEvent(event) {
       strokes: (ls.value != null && ls.value > 0) ? ls.value : null,
       display: ls.displayValue || '–'
     }));
+
+    // Count rounds with actual stroke data
+    const roundsWithData = rounds.filter(r => r.strokes != null).length;
+
+    // A player missed the cut if:
+    // 1. ESPN explicitly says so (status fields), OR
+    // 2. We're in R3/R4 and they only have 2 rounds of data (stopped after R2)
+    const espnSaysCut = statusTypeName.includes('CUT') ||
+                        statusTypeName.includes('MDF') ||
+                        statusTypeName.includes('WITHDRAWN') ||
+                        statusDisplay.toUpperCase() === 'CUT' ||
+                        statusDisplay.toUpperCase() === 'MC' ||
+                        statusDisplay.toUpperCase() === 'MDF' ||
+                        statusDisplay.toUpperCase() === 'WD' ||
+                        statusDisplay.toUpperCase() === 'DQ' ||
+                        statusDisplay.toUpperCase().includes('CUT');
+    const inferredCut = currentRound >= 3 && roundsWithData <= 2;
+    const missedCut = espnSaysCut || inferredCut;
 
     // Current round score = use displayValue of last round with data (already relative to par)
     const lastRound = rounds.filter(r => r.strokes != null).slice(-1)[0];
@@ -717,17 +728,6 @@ function parseESPNEvent(event) {
 
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   document.getElementById('last-updated').textContent = `Updated ${now} · ${leaderboard.length} players`;
-
-  // DEBUG: log RAW status for every competitor so we can find cut players
-  console.log('=== ESPN RAW STATUS ALL PLAYERS ===');
-  competitors.forEach(c => {
-    const stn = c.status?.type?.name || '';
-    const sdv = c.status?.displayValue || '';
-    // highlight likely cut players
-    const flag = (stn+sdv).toUpperCase().includes('CUT') || sdv === 'WD' || sdv === 'MDF' ? '*** CUT? ***' : '';
-    console.log(flag, c.athlete?.displayName, '|', 'typeName:', stn, '| displayValue:', sdv, '| score:', c.score, '| thru:', c.status?.thru);
-  });
-  console.log('=== END DEBUG ===');
 
   renderPlayers();
   renderStandings();
