@@ -665,8 +665,8 @@ function parseESPNEvent(event) {
     const linescores = c.linescores || [];
     const rounds = linescores.map((ls, idx) => ({
       r: idx + 1,
-      strokes: (ls.value != null && ls.value > 0) ? ls.value : null,
-      display: ls.displayValue || '–'
+      strokes: (ls.value != null && ls.value > 0) ? ls.value : null,  // actual strokes e.g. 70
+      display: ls.displayValue || ''   // score vs par e.g. "-2", "+2", "E"
     }));
 
     // Count rounds with actual stroke data
@@ -687,24 +687,18 @@ function parseESPNEvent(event) {
     const inferredCut = currentRound >= 3 && roundsWithData <= 2;
     const missedCut = espnSaysCut || inferredCut;
 
-    // Current round score = use displayValue of last round with data (already relative to par)
+    // Current round score = displayValue of the last round with data (score vs par)
     const lastRound = rounds.filter(r => r.strokes != null).slice(-1)[0];
     let todayScoreNum = null;
     let todayStr = '';
-    if (lastRound) {
-      // display is like '-4', '+2', 'E', '72' etc
+    if (lastRound && lastRound.display !== '') {
       const d = lastRound.display;
       if (d === 'E' || d === 'Even') { todayScoreNum = 0; todayStr = 'E'; }
       else {
         const n = parseInt(d);
-        // If display looks like an actual stroke count (>20), convert to score vs par
-        if (!isNaN(n) && Math.abs(n) > 20) {
-          todayScoreNum = n - 72;
-        } else if (!isNaN(n)) {
+        if (!isNaN(n)) {
           todayScoreNum = n;
-        }
-        if (todayScoreNum != null) {
-          todayStr = todayScoreNum === 0 ? 'E' : todayScoreNum > 0 ? `+${todayScoreNum}` : `${todayScoreNum}`;
+          todayStr = n === 0 ? 'E' : n > 0 ? `+${n}` : `${n}`;
         }
       }
     }
@@ -733,20 +727,6 @@ function parseESPNEvent(event) {
 
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   document.getElementById('last-updated').textContent = `Updated ${now} · ${leaderboard.length} players`;
-
-  // DEBUG: log raw linescore data for Scheffler
-  competitors.forEach(c => {
-    if ((c.athlete?.displayName || '').toLowerCase().includes('scheffler')) {
-      console.log('SCHEFFLER RAW:', {
-        score: c.score,
-        linescores: c.linescores,
-        status: c.status
-      });
-      (c.linescores || []).forEach((ls, i) => {
-        console.log(`  Round ${i+1}: ls.value=${ls.value} ls.displayValue=${ls.displayValue}`);
-      });
-    }
-  });
 
   renderPlayers();
   renderStandings();
@@ -910,13 +890,14 @@ function renderStandings() {
       // Cut tag
       const cutTag = d.player.missedCut ? '<span class="pick-cut">💩</span>' : '';
 
-      // Build round score chips
-      // ESPN linescores store score vs par directly (e.g. -4, +2) not raw strokes
-      // r.strokes holds the raw value from ls.value which IS the score vs par
+      // Build round score chips using displayValue which is score vs par (e.g. "-2", "+2", "E")
       const roundChips = d.player.rounds.map(r => {
-        if (r.strokes == null) return '';
-        // If value looks like actual strokes (>20), convert; otherwise use as-is (score vs par)
-        const rs = r.strokes > 20 ? r.strokes - 72 : r.strokes;
+        if (r.strokes == null || r.display === '') return '';
+        const d2 = r.display;
+        let rs;
+        if (d2 === 'E' || d2 === 'Even') rs = 0;
+        else rs = parseInt(d2);
+        if (isNaN(rs)) return '';
         const rsStr = rs === 0 ? 'E' : rs > 0 ? `+${rs}` : `${rs}`;
         const cls = rs < 0 ? 'under' : rs > 0 ? 'over' : '';
         return `<span class="pick-round ${cls}">R${r.r}:${rsStr}</span>`;
@@ -958,7 +939,7 @@ function renderStandings() {
         }
       }
 
-      return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">${effStr}</span>${cutTag}${roundsHtml}${thruTag}</div>`;
+      return `<div class="pick-line"><span class="pick-name">${lastName}</span><span class="pick-score">${effStr}</span>${roundsHtml}${cutTag}${thruTag}</div>`;
     }).join('');
 
     return `
