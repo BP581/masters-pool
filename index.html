@@ -894,14 +894,15 @@ function renderStandings() {
       const effStr = eff === 0 ? 'E' : (eff > 0 ? `+${eff}` : `${eff}`);
 
       // Cut tag
-      const cutTag = d.player.missedCut ? '<span class="pick-cut">✂</span>' : '';
+      const cutTag = d.player.missedCut ? '<span class="pick-cut">💩</span>' : '';
 
       // Build round score chips
-      // For each actual round, show score vs par
-      const PAR = 72;
+      // ESPN linescores store score vs par directly (e.g. -4, +2) not raw strokes
+      // r.strokes holds the raw value from ls.value which IS the score vs par
       const roundChips = d.player.rounds.map(r => {
         if (r.strokes == null) return '';
-        const rs = r.strokes - PAR;
+        // If value looks like actual strokes (>20), convert; otherwise use as-is (score vs par)
+        const rs = r.strokes > 20 ? r.strokes - 72 : r.strokes;
         const rsStr = rs === 0 ? 'E' : rs > 0 ? `+${rs}` : `${rs}`;
         const cls = rs < 0 ? 'under' : rs > 0 ? 'over' : '';
         return `<span class="pick-round ${cls}">R${r.r}:${rsStr}</span>`;
