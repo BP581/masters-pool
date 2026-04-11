@@ -734,6 +734,20 @@ function parseESPNEvent(event) {
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   document.getElementById('last-updated').textContent = `Updated ${now} · ${leaderboard.length} players`;
 
+  // DEBUG: log raw linescore data for Scheffler
+  competitors.forEach(c => {
+    if ((c.athlete?.displayName || '').toLowerCase().includes('scheffler')) {
+      console.log('SCHEFFLER RAW:', {
+        score: c.score,
+        linescores: c.linescores,
+        status: c.status
+      });
+      (c.linescores || []).forEach((ls, i) => {
+        console.log(`  Round ${i+1}: ls.value=${ls.value} ls.displayValue=${ls.displayValue}`);
+      });
+    }
+  });
+
   renderPlayers();
   renderStandings();
   // Refresh picks editor so dropdowns have player names
