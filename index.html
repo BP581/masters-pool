@@ -718,6 +718,25 @@ function parseESPNEvent(event) {
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   document.getElementById('last-updated').textContent = `Updated ${now} · ${leaderboard.length} players`;
 
+  // DEBUG: log status fields for all players so we can see what ESPN returns
+  console.log('=== ESPN STATUS DEBUG ===');
+  leaderboard.slice(0, 5).forEach(p => {
+    console.log(`${p.name}: pos="${p.pos}" thru="${p.thru}" missedCut=${p.missedCut} status="${p.status}"`);
+  });
+  // Also log the raw status of competitors to see exact field values
+  competitors.slice(0, 5).forEach(c => {
+    console.log('RAW:', c.athlete?.displayName, {
+      statusTypeName: c.status?.type?.name,
+      statusDisplay: c.status?.displayValue,
+      statusShort: c.status?.type?.shortDetail,
+      statusDetail: c.status?.type?.detail,
+      statusPeriod: c.status?.period,
+      statusThru: c.status?.thru,
+      score: c.score
+    });
+  });
+  console.log('=== END DEBUG ===');
+
   renderPlayers();
   renderStandings();
   // Refresh picks editor so dropdowns have player names
