@@ -671,11 +671,27 @@ function parseESPNEvent(event) {
       display: ls.displayValue || '–'
     }));
 
-    // Current round score = score of the last round with data
+    // Current round score = use displayValue of last round with data (already relative to par)
     const lastRound = rounds.filter(r => r.strokes != null).slice(-1)[0];
-    const todayStrokes = lastRound ? lastRound.strokes : null;
-    const todayScoreNum = todayStrokes != null ? todayStrokes - 72 : null;
-    const todayStr = todayScoreNum == null ? '' : todayScoreNum === 0 ? 'E' : todayScoreNum > 0 ? `+${todayScoreNum}` : `${todayScoreNum}`;
+    let todayScoreNum = null;
+    let todayStr = '';
+    if (lastRound) {
+      // display is like '-4', '+2', 'E', '72' etc
+      const d = lastRound.display;
+      if (d === 'E' || d === 'Even') { todayScoreNum = 0; todayStr = 'E'; }
+      else {
+        const n = parseInt(d);
+        // If display looks like an actual stroke count (>20), convert to score vs par
+        if (!isNaN(n) && Math.abs(n) > 20) {
+          todayScoreNum = n - 72;
+        } else if (!isNaN(n)) {
+          todayScoreNum = n;
+        }
+        if (todayScoreNum != null) {
+          todayStr = todayScoreNum === 0 ? 'E' : todayScoreNum > 0 ? `+${todayScoreNum}` : `${todayScoreNum}`;
+        }
+      }
+    }
 
     return {
       pos: missedCut ? 'CUT' : (c.status?.position?.displayText || statusDisplay || '–'),
