@@ -827,9 +827,10 @@ function renderStandings() {
   const madeCut = leaderboard.filter(p => !p.missedCut);
 
   function worstRoundStrokes(rNum) {
+    // Use current worst score in the round, whether complete or in progress
     const strokes = madeCut
       .map(p => p.rounds.find(r => r.r === rNum)?.strokes)
-      .filter(s => s != null && s >= 60 && s <= 100); // must look like real strokes
+      .filter(s => s != null && s >= 60 && s <= 100);
     return strokes.length ? Math.max(...strokes) : null;
   }
 
