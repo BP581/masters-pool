@@ -843,7 +843,7 @@ function renderStandings() {
   function worstRoundStrokes(rNum) {
     const strokes = madeCut
       .map(p => p.rounds.find(r => r.r === rNum)?.strokes)
-      .filter(s => s != null && s > 0);
+      .filter(s => s != null && s >= 60 && s <= 100); // must look like real strokes
     return strokes.length ? Math.max(...strokes) : null;
   }
 
@@ -928,15 +928,15 @@ function renderStandings() {
       if (d.player.missedCut) {
         const wr3 = leaderboard._worstR3;
         const wr4 = leaderboard._worstR4;
-        if (wr3 != null) {
+        if (wr3 != null && wr3 >= 60) {
           const ps = (wr3 + 2) - PAR;
           const psStr = ps > 0 ? `+${ps}` : `${ps}`;
           penaltyChips += `<span class="pick-round penalty">R3:${psStr}★</span>`;
         }
-        if (wr4 != null) {
+        if (wr4 != null && wr4 >= 60) {
           const ps = (wr4 + 2) - PAR;
           const psStr = ps > 0 ? `+${ps}` : `${ps}`;
-          penaltyChips += `<span class="pick-round penalty">R4:${ps > 0 ? '+' : ''}${ps}★</span>`;
+          penaltyChips += `<span class="pick-round penalty">R4:${psStr}★</span>`;
         }
       }
 
