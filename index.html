@@ -702,12 +702,14 @@ function parseESPNEvent(event) {
     const inferredCut = currentRound >= 3 && roundsWithData <= 2;
     const missedCut = espnSaysCut || inferredCut;
 
-    // Current round score = displayValue of the last round with data (score vs par)
-    const lastRound = rounds.filter(r => r.strokes != null).slice(-1)[0];
+    // Current round score = only count if player is IN the current tournament round
+    // A player is "in today's round" if their round count matches currentRound,
+    // OR if they have started currentRound (rounds.length >= currentRound)
+    const currentRoundData = rounds.find(r => r.r === currentRound);
     let todayScoreNum = null;
     let todayStr = '';
-    if (lastRound && lastRound.display !== '') {
-      const d = lastRound.display;
+    if (currentRoundData && currentRoundData.strokes != null && currentRoundData.display !== '') {
+      const d = currentRoundData.display;
       if (d === 'E' || d === 'Even') { todayScoreNum = 0; todayStr = 'E'; }
       else {
         const n = parseInt(d);
